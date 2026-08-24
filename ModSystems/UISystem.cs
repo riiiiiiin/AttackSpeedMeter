@@ -1,10 +1,6 @@
-﻿using AttackSpeedMeter.UI;
+using AttackSpeedMeter.UI;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -15,62 +11,65 @@ namespace AttackSpeedMeter.ModSystems
 {
     public class UISystem : ModSystem
     {
-        internal UserInterface _MeterInterface;
-        internal MeterUI _MeterUI;
+        internal UserInterface MeterInterface;
+        internal MeterUI MeterUI;
         private GameTime _lastUpdateUiGameTime;
-        internal bool IsMeterClosed() => _MeterInterface?.CurrentState == null;
+
+        internal bool IsMeterClosed() => MeterInterface?.CurrentState == null;
+
         public override void Load()
         {
             if (!Main.dedServ)
             {
-                _MeterInterface = new UserInterface();
-                _MeterUI = new MeterUI();
-                _MeterUI.Activate();
+                MeterInterface = new UserInterface();
+                MeterUI = new MeterUI();
+                MeterUI.Activate();
             }
-            base.Load();
         }
+
         public override void Unload()
         {
-            _MeterInterface = null;
-            _MeterUI = null;
-            base.Unload();
+            MeterInterface = null;
+            MeterUI = null;
         }
+
         public override void UpdateUI(GameTime gameTime)
         {
             _lastUpdateUiGameTime = gameTime;
-            if (_MeterInterface?.CurrentState!=null)
+            if (MeterInterface?.CurrentState != null)
             {
-                _MeterInterface.Update(gameTime);
+                MeterInterface.Update(gameTime);
             }
-            base.UpdateUI(gameTime);
         }
+
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
             int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseTextIndex != -1)
+            if (mouseTextIndex == -1)
             {
-                layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                    "AttackSpeedMeter: MeterInterface",
-                    delegate
-                    {
-                        if (_lastUpdateUiGameTime != null && _MeterInterface?.CurrentState != null)
-                        {
-                            _MeterInterface.Draw(Main.spriteBatch, _lastUpdateUiGameTime);
-                        }
-                        return true;
-                    },
-                    InterfaceScaleType.UI));
+                // Fall back to appending the layer so the meter stays visible even if
+                // the vanilla layer name changes in a future version.
+                mouseTextIndex = layers.Count;
             }
-            base.ModifyInterfaceLayers(layers);
+            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                "AttackSpeedMeter: MeterInterface",
+                () =>
+                {
+                    if (_lastUpdateUiGameTime != null && MeterInterface?.CurrentState != null)
+                    {
+                        MeterInterface.Draw(Main.spriteBatch, _lastUpdateUiGameTime);
+                    }
+                    return true;
+                },
+                InterfaceScaleType.UI));
         }
+
         internal void CloseMeter()
-            => _MeterInterface?.SetState((UIState)null);
-        //{
-        //    _MeterInterface?.SetState((UIState)null);
-        //    Main.NewText("2");
-        //}
-        internal void OpenMeter() 
-            => _MeterInterface?.SetState((UIState)_MeterUI);
+            => MeterInterface?.SetState(null);
+
+        internal void OpenMeter()
+            => MeterInterface?.SetState(MeterUI);
+
         public void ToggleMeter()
         {
             if (IsMeterClosed())

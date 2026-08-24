@@ -9,3 +9,6 @@ Check workshop page for more infomation!
 你需要为攻速计绑定一个按键来使用它！
 在Mod配置中调整UI的位置和大小，或者启用拖拽。
 前往创意工坊查看更多信息！
+
+Co-created by Aesc & DimHaze. Currently maintained by DimHaze.
+由 Aesc 与 DimHaze 共同制作，目前由 DimHaze 维护。

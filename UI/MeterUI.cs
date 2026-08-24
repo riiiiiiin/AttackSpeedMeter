@@ -1,14 +1,9 @@
-﻿using AttackSpeedMeter.Helpers;
+#nullable enable
+using AttackSpeedMeter.Helpers;
 using AttackSpeedMeter.ModConfigs;
-using AttackSpeedMeter.ModSystems;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
-using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -17,35 +12,39 @@ namespace AttackSpeedMeter.UI
 {
     public class MeterUI : UIState
     {
-        private AutoTextPanel mainPanel;
+        private readonly AutoTextPanel _mainPanel = new();
+
         public override void OnInitialize()
         {
-            mainPanel = new AutoTextPanel();
-            Append(mainPanel);
+            Append(_mainPanel);
         }
+
         public override void Update(GameTime gameTime)
         {
-            if ((long)Main.GameUpdateCount % 2 != 0)
+            // Rebuild the text every other frame to halve the UI churn.
+            if (Main.GameUpdateCount % 2 != 0)
             {
                 base.Update(gameTime);
                 return;
             }
+
             Player player = Main.player[Main.myPlayer];
             Item item = player.HeldItem;
             DamageClass damageClass = item.DamageType;
-            mainPanel.RemoveAllText();
-            // Get new infomation only if this is a weapon, not accessory or ammo
-            if ((item.damage >= 0 || DamageClasses.Contains(damageClass)) && item.useTime > 0 && !(item.ammo > 0) && !item.accessory)
+            _mainPanel.RemoveAllText();
+
+            // Only show the meter for real weapons: not ammo, not accessories, must have a use time.
+            if (item.damage >= 0 && item.useTime > 0 && !(item.ammo > 0) && !item.accessory)
             {
-                var useTime = item.useTime;
+                int useTime = item.useTime;
                 bool needAnimationTime = true;
                 bool needUseTime = false;
                 float attackSpeed = player.GetTotalAttackSpeed(damageClass);
                 int totalUseTime = CombinedHooks.TotalUseTime(useTime, player, item);
                 int totalAnimationTime = CombinedHooks.TotalAnimationTime(item.useAnimation, player, item);
                 float vanillaMult = ItemID.Sets.BonusAttackSpeedMultiplier[item.type];
-                // Calculate Use Time Thresholds
-                // nextUseTimeThreshold with a null means that Total Use Time cant be any smaller 
+
+                // Use Time thresholds. A null next threshold means total use time cannot get any smaller.
                 float prevUseTimeThreshold;
                 float? nextUseTimeThreshold = null;
                 if (totalUseTime != 1)
@@ -53,8 +52,8 @@ namespace AttackSpeedMeter.UI
                     nextUseTimeThreshold = UseTimeHelper.BinarySearchThreshold(player, item, totalUseTime - 1);
                 }
                 prevUseTimeThreshold = UseTimeHelper.BinarySearchThreshold(player, item, totalUseTime);
-                // Calculate Animation Thresholds
-                // nextAnimationThreshold with a null means that Total Animation cant be any smaller 
+
+                // Animation thresholds. A null next threshold means total animation time cannot get any smaller.
                 float prevAnimationThreshold;
                 float? nextAnimationThreshold = null;
                 var multipliedUseTime = Math.Max(1, (int)(item.useTime * (1 / CombinedHooks.TotalUseSpeedMultiplier(player, item))));
@@ -63,9 +62,12 @@ namespace AttackSpeedMeter.UI
                     nextAnimationThreshold = UseAnimationHelper.BinarySearchThreshold(player, item, totalAnimationTime - 1);
                 }
                 prevAnimationThreshold = UseAnimationHelper.BinarySearchThreshold(player, item, totalAnimationTime);
-                // Decides which information to display
-                // attackSpeedOnlyAffectsWeaponAnimation means that speed dont affact Use Time, so dont display thresholds
-                // totalAnimationTime==totalUseTime or they have same thresholds lead to information redundancy
+
+                // Decide which information to display.
+                // attackSpeedOnlyAffectsWeaponAnimation means attack speed does not affect use time,
+                // so the use-time thresholds would be meaningless.
+                // When totalAnimationTime == totalUseTime (or their thresholds coincide),
+                // showing both is redundant.
                 if (!item.attackSpeedOnlyAffectsWeaponAnimation)
                 {
                     needUseTime = true;
@@ -74,104 +76,89 @@ namespace AttackSpeedMeter.UI
                         needAnimationTime = false;
                     }
                 }
-                mainPanel.AddText(LocalizationHelper.GetHeader(damageClass, attackSpeed));
+
+                _mainPanel.AddText(LocalizationHelper.GetHeader(damageClass, attackSpeed));
 
                 if (needUseTime)
                 {
-                    // extra multipliers
-                    float itemMult = ItemLoader.UseTimeMultiplier(item, player)
-                                     * (1 / ItemLoader.UseSpeedMultiplier(item, player));
-                    float playerMult = PlayerLoader.UseTimeMultiplier(player, item)
-                                       * (1 / PlayerLoader.UseSpeedMultiplier(player, item));
-                    string? prevColor = null, currentColor = null, nextColor = null;
-                    if (ModContent.GetInstance<ASMConfigs>().UseColor)
-                    {
-                        prevColor = FormatHelper.ColorToString(ColorHelper.Low);
-                        currentColor = FormatHelper.ColorToString(ColorHelper.GetColor(prevUseTimeThreshold,nextUseTimeThreshold,attackSpeed*10000));
-                        nextColor = FormatHelper.ColorToString(ColorHelper.High);
-                    }
-                    // Insert your code of coloring here
-                    // Leave it null for white
-                    // Change the color for infinity in LocalizationHelper.cs
-                    //float assumedUseTimeForColor = item.useTime * itemMult * playerMult;
-                    //float? p = prevUseTimeThreshold * (1f / 10000f);
-                    //float? n = nextUseTimeThreshold * (1f / 10000f);
-                    //prevColor = ColorHelper.GetColor(totalUseTime, assumedUseTimeForColor, p);
-                    //currentColor = ColorHelper.GetColor(totalUseTime, assumedUseTimeForColor, attackSpeed);
-                    //nextColor = ColorHelper.GetColor(totalUseTime - 1, assumedUseTimeForColor, n);
-                    // FOR DEBUG: Displays the color along side RGB value
-                    // mainPanel.AddText(p.ToString());
-                    //mainPanel.AddText("[c/" + FormatHelper.ColorToString(prevColor.Value) + ":"+
-                    //                    FormatHelper.ColorToString(prevColor.Value)
-                    //                    +"]");
-                    mainPanel.AddText(LocalizationHelper.GetStatus(false, totalUseTime, prevUseTimeThreshold, nextUseTimeThreshold, prevColor, currentColor, nextColor));
-                    if (Math.Abs(itemMult - 1) >= 1e-4f)
-                    {
-                        mainPanel.AddText(LocalizationHelper.GetMultiplier(false, 1 / playerMult, 1 / itemMult));
-                    }
-                    else if (Math.Abs(vanillaMult - 1) >= 1e-4f)
-                    {
-                        mainPanel.AddText(LocalizationHelper.GetMultiplier(false, 1 / playerMult, vanillaMult));
-                    }
-                    else if (Math.Abs(playerMult - 1) >= 1e-4f)
-                    {
-                        mainPanel.AddText(LocalizationHelper.GetMultiplier(false, 1 / playerMult, 1 / itemMult));
-                    }
+                    AddStatusLines(
+                        isAnimation: false,
+                        time: totalUseTime,
+                        prevThreshold: prevUseTimeThreshold,
+                        nextThreshold: nextUseTimeThreshold,
+                        attackSpeed: attackSpeed,
+                        itemMult: ItemLoader.UseTimeMultiplier(item, player) * (1 / ItemLoader.UseSpeedMultiplier(item, player)),
+                        playerMult: PlayerLoader.UseTimeMultiplier(player, item) * (1 / PlayerLoader.UseSpeedMultiplier(player, item)),
+                        vanillaMult: vanillaMult);
                 }
                 else
                 {
-                    // simply displays Total Use Time
-                    mainPanel.AddText(LocalizationHelper.GetSimpleStatus(totalUseTime));
+                    _mainPanel.AddText(LocalizationHelper.GetSimpleStatus(totalUseTime));
                 }
+
                 if (needAnimationTime)
                 {
-                    // extra multipliers
-                    float itemMult = ItemLoader.UseAnimationMultiplier(item, player)
-                                     * (1 / ItemLoader.UseSpeedMultiplier(item, player));
-                    float playerMult = PlayerLoader.UseAnimationMultiplier(player, item)
-                                       * (1 / PlayerLoader.UseSpeedMultiplier(player, item));
-                    string? prevColor = null, currentColor = null, nextColor = null;
-                    if (ModContent.GetInstance<ASMConfigs>().UseColor)
-                    {
-                        prevColor = FormatHelper.ColorToString(ColorHelper.Low);
-                        currentColor = FormatHelper.ColorToString(ColorHelper.GetColor(prevAnimationThreshold, nextAnimationThreshold, attackSpeed * 10000));
-                        nextColor = FormatHelper.ColorToString(ColorHelper.High);
-                    }
-                    //// Insert your code of coloring here
-                    //// Leave it null for white
-                    //// Change the color for infinity in LocalizationHelper.cs
-                    //float assumedUseAnimationTimeForColor = item.useAnimation * itemMult * playerMult;
-                    //// the assumed use animation time if there is absolutely no rounding and no attack speed
-                    //float? p = prevAnimationThreshold * (1f / 10000f);
-                    //float? n = nextAnimationThreshold * (1f / 10000f);
-                    //prevColor = ColorHelper.GetColor(totalAnimationTime, assumedUseAnimationTimeForColor, p);
-                    //currentColor = ColorHelper.GetColor(totalAnimationTime, assumedUseAnimationTimeForColor, attackSpeed);
-                    //nextColor = ColorHelper.GetColor(totalAnimationTime - 1, assumedUseAnimationTimeForColor, n);
-                    mainPanel.AddText(LocalizationHelper.GetStatus(true, totalAnimationTime, prevAnimationThreshold, nextAnimationThreshold, prevColor, currentColor, nextColor));
-                    if (Math.Abs(itemMult - 1) >= 1e-4f)
-                    {
-                        mainPanel.AddText(LocalizationHelper.GetMultiplier(true, 1 / playerMult, 1 / itemMult));
-                    }
-                    else if (Math.Abs(vanillaMult - 1) >= 1e-4f)
-                    {
-                        mainPanel.AddText(LocalizationHelper.GetMultiplier(true, 1 / playerMult, vanillaMult));
-                    }
-                    else if (Math.Abs(playerMult - 1) >= 1e-4f)
-                    {
-                        mainPanel.AddText(LocalizationHelper.GetMultiplier(true, 1 / playerMult, 1 / itemMult));
-                    }
+                    AddStatusLines(
+                        isAnimation: true,
+                        time: totalAnimationTime,
+                        prevThreshold: prevAnimationThreshold,
+                        nextThreshold: nextAnimationThreshold,
+                        attackSpeed: attackSpeed,
+                        itemMult: ItemLoader.UseAnimationMultiplier(item, player) * (1 / ItemLoader.UseSpeedMultiplier(item, player)),
+                        playerMult: PlayerLoader.UseAnimationMultiplier(player, item) * (1 / PlayerLoader.UseSpeedMultiplier(player, item)),
+                        vanillaMult: vanillaMult);
                 }
             }
-            // print legends else
             else
             {
-                foreach (var legend in LocalizationHelper.GetLegends())
+                // No weapon held: show the legend instead.
+                foreach (string legend in LocalizationHelper.GetLegends())
                 {
-                    mainPanel.AddText(legend);
+                    _mainPanel.AddText(legend);
                 }
             }
-            mainPanel.UpdateText();
+
+            _mainPanel.UpdateText();
             base.Update(gameTime);
+        }
+
+        /// <summary>
+        /// Adds the status line (and the extra-multiplier line, when anything is actually
+        /// boosting the rate) for one of the two time values, use time or use animation.
+        /// </summary>
+        private void AddStatusLines(bool isAnimation, int time, float prevThreshold, float? nextThreshold,
+            float attackSpeed, float itemMult, float playerMult, float vanillaMult)
+        {
+            string? prevColor = null, currentColor = null, nextColor = null;
+            if (ModContent.GetInstance<ASMConfigs>().UseColor)
+            {
+                prevColor = FormatHelper.ColorToString(ColorHelper.Low);
+                currentColor = FormatHelper.ColorToString(ColorHelper.GetColor(prevThreshold, nextThreshold, attackSpeed * 10000));
+                nextColor = FormatHelper.ColorToString(ColorHelper.High);
+            }
+
+            _mainPanel.AddText(LocalizationHelper.GetStatus(isAnimation, time, prevThreshold, nextThreshold, prevColor, currentColor, nextColor));
+
+            // Show the extra multipliers only when something actually changes the rate.
+            // The "item" side shows the modded item multiplier when present, otherwise the
+            // vanilla bonus multiplier, otherwise a plain 1.00.
+            float displayedItemMult;
+            if (Math.Abs(itemMult - 1) >= 1e-4f)
+            {
+                displayedItemMult = 1 / itemMult;
+            }
+            else if (Math.Abs(vanillaMult - 1) >= 1e-4f)
+            {
+                displayedItemMult = vanillaMult;
+            }
+            else
+            {
+                displayedItemMult = 1f;
+            }
+            if (Math.Abs(playerMult - 1) >= 1e-4f || Math.Abs(displayedItemMult - 1) >= 1e-4f)
+            {
+                _mainPanel.AddText(LocalizationHelper.GetMultiplier(isAnimation, 1 / playerMult, displayedItemMult));
+            }
         }
     }
 }
