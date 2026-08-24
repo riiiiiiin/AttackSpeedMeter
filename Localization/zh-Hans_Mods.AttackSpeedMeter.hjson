@@ -1,22 +1,33 @@
 UITips: {
-	Headers: {
-		MeleeSpeed: - [c/ff90a0:近战攻速:[BUFF]] -
-		RangedSpeed: - [c/b6ff90:远程攻速:[BUFF]] -
-		MeleeNoSpeedSpeed: - [c/be8189:非攻速近战攻速:[BUFF]] -
-		MagicSpeed: - [c/90efff:魔法攻速:[BUFF]] -
-		SummonMeleeSpeedSpeed: - [c/ff90bc:鞭子攻速:[BUFF]] -
-		ThrowingSpeed: - [c/ffaa90:投掷攻速:[BUFF]] -
-		GenericSpeed: - 全局攻速:[BUFF] -
-		SummonSpeed: - [c/fb90eb:召唤攻速:[BUFF]] -
-		RogueSpeed: - [c/d490ff:盗贼攻速:[BUFF]] -
-		TrueMeleeSpeed: - [c/ff90a0:真近战攻速:[BUFF]] -
-		TrueMeleeNoSpeedSpeed: - [c/be8189:非攻速真近战攻速:[BUFF]] -
-		MeleeRangedHybridSpeed: - [c/a790ff:近战-远程混合攻速:[BUFF]] -
-		AverageSpeed: - 无职业攻速:[BUFF] -
-		HealerSpeed: - [c/ffd890:光辉攻速:[BUFF]] -
-		HealerToolSpeed: - [c/ffd890:治疗速度:[BUFF]] -
-		BardSpeed: - [c/90ffd1:演奏速度:[BUFF]] -
+	HeaderLabels: {
+		MeleeSpeed: 近战攻速
+		RangedSpeed: 远程攻速
+		MeleeNoSpeedSpeed: 非攻速近战攻速
+		MagicSpeed: 魔法攻速
+		SummonMeleeSpeedSpeed: 鞭子攻速
+		ThrowingSpeed: 投掷攻速
+		GenericSpeed: 全局攻速
+		SummonSpeed: 召唤攻速
 	}
+
+	# Only list those modded damage class names that
+	#  can not be constructed from its original
+	#  internal names in the corresponding language.
+	# Do not copy the English version into other languages.
+	# Each line is "FullName: Label", matched by the class's
+	#  internal FullName (e.g. "CalamityMod/RogueDamageClass").
+	ModdedHeaderLabels:
+		'''
+		CalamityMod/TrueMeleeNoSpeedDamageClass: 非攻速真近战攻速
+		CalamityMod/MeleeRangedHybridDamageClass: 近战-远程混合攻速
+		CalamityMod/AverageDamageClass: 平均职业攻速
+		ThoriumMod/HealerDamage: 光辉攻速
+		ThoriumMod/HealerTool: 治疗速度
+		ThoriumMod/BardDamage: 演奏速度
+		'''
+	HeaderFormat: "[LABEL]：[BUFF]"
+	SuffixesToRemove: 伤害
+	SuffixesToAdd: 攻速
 
 	UseTime: {
 		SimpleStatusTemplate: 当前使用时间: [TIME]

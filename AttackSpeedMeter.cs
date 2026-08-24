@@ -17,5 +17,10 @@ namespace AttackSpeedMeter
 			MeterKey = KeybindLoader.RegisterKeybind(this, "Toggle Attack Speed Meter", "K");
 
 		}
+
+		public override void Unload()
+		{
+			MeterKey = null;
+		}
 	}
 }

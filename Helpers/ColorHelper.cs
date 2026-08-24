@@ -1,13 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace AttackSpeedMeter.Helpers
 {
@@ -105,19 +97,24 @@ namespace AttackSpeedMeter.Helpers
         }
         private static Color GetLinearColor(float ratio)
         {
-            // 确保比率在0到1之间
+            // Clamp ratio to [0, 1]
             ratio = Math.Max(0, Math.Min(1, ratio));
-            // 计算每个颜色通道的渐变值
+            // Interpolate each RGB channel between Low and High
             int r = (int)(Low.R + ratio * (High.R - Low.R));
             int g = (int)(Low.G + ratio * (High.G - Low.G));
             int b = (int)(Low.B + ratio * (High.B - Low.B));
-
-            // 返回新的颜色
             return new Color(r, g, b);
         }
-        private static float GetRatio(float low, float high, float raw) => 
+
+        private static float GetRatio(float low, float high, float raw) =>
             (raw - low) / (high - low);
-        public static Color GetColor(float low, float? high, float raw) => 
-            high == null ? GetLinearColor(GetRatio(low,low*1.1f,raw)) : GetLinearColor(GetRatio(low, high.Value, raw));
+
+        /// <summary>
+        /// Maps <paramref name="raw"/> between <paramref name="low"/> and <paramref name="high"/>
+        /// (or a 10% window above <paramref name="low"/> when <paramref name="high"/> is null)
+        /// to a color linearly interpolated between <see cref="Low"/> and <see cref="High"/>.
+        /// </summary>
+        public static Color GetColor(float low, float? high, float raw) =>
+            high == null ? GetLinearColor(GetRatio(low, low * 1.1f, raw)) : GetLinearColor(GetRatio(low, high.Value, raw));
     }
 }

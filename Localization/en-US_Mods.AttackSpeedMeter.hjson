@@ -1,22 +1,31 @@
 UITips: {
-	Headers: {
-		MeleeSpeed: - [c/ff90a0:Melee Speed:[BUFF]] -
-		RangedSpeed: - [c/b6ff90:Ranged Speed:[BUFF]] -
-		MeleeNoSpeedSpeed: - [c/be8189:Melee (No Speed):[BUFF]] -
-		MagicSpeed: - [c/90efff:Magic Speed:[BUFF]] -
-		SummonMeleeSpeedSpeed: - [c/ff90bc:Whip Speed:[BUFF]] -
-		ThrowingSpeed: - [c/ffaa90:Throwing Speed:[BUFF]] -
-		GenericSpeed: - Generic Speed:[BUFF] -
-		SummonSpeed: - [c/fb90eb:Summon Speed:[BUFF]] -
-		RogueSpeed: - [c/d490ff:Rogue Speed:[BUFF]] -
-		TrueMeleeSpeed: - [c/ff90a0:True Melee Speed:[BUFF]] -
-		TrueMeleeNoSpeedSpeed: - [c/be8189:True Melee (No Speed):[BUFF]] -
-		MeleeRangedHybridSpeed: - [c/a790ff:Melee-Ranged Hybrid Speed:[BUFF]] -
-		AverageSpeed: - Typeless Speed:[BUFF] -
-		HealerSpeed: - [c/ffd890:Healer Speed:[BUFF]] -
-		HealerToolSpeed: - [c/ffd890:Healer Tool Speed:[BUFF]] -
-		BardSpeed: - [c/90ffd1:Bard Damage Speed:[BUFF]] -
+	HeaderLabels: {
+		MeleeSpeed: Melee Speed
+		RangedSpeed: Ranged Speed
+		MeleeNoSpeedSpeed: Melee (No Speed)
+		MagicSpeed: Magic Speed
+		SummonMeleeSpeedSpeed: Whip Speed
+		ThrowingSpeed: Throwing Speed
+		GenericSpeed: Generic Speed
+		SummonSpeed: Summon Speed
 	}
+
+	# Only list those modded damage class names that
+	#  can not be constructed from its original
+	#  internal names in the corresponding language.
+	# Do not copy the English version into other languages.
+	# Each line is "FullName: Label", matched by the class's
+	#  internal FullName (e.g. "CalamityMod/RogueDamageClass").
+	ModdedHeaderLabels:
+		'''
+		CalamityMod/TrueMeleeNoSpeedDamageClass: True Melee (No Speed)
+		ThoriumMod/HealerDamage: Healer Speed
+		ThoriumMod/HealerTool: Healing Speed
+		ThoriumMod/BardDamage: Bard Damage Speed
+		'''
+	HeaderFormat: "[LABEL]: [BUFF]"
+	SuffixesToRemove: Damage, damage
+	SuffixesToAdd: " Speed"
 
 	UseTime: {
 		SimpleStatusTemplate: Use time: [TIME]
